@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>邀请码互助平台 · 多人版</title>
+    <style>
+        :root {
+            --bg: #f5f3f0;
+            --card-bg: #ffffff;
+            --text: #2d2d2d;
+            --text-secondary: #6b6b6b;
+            --text-muted: #999999;
+            --primary: #f97316;
+            --primary-hover: #ea580c;
+            --primary-light: #fff7ed;
+            --danger: #ef4444;
+            --danger-light: #fef2f2;
+            --success: #10b981;
+            --success-light: #ecfdf5;
+            --border: #e8e4df;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+            --shadow: 0 4px 16px rgba(0,0,0,0.06),0 1px 4px rgba(0,0,0,0.04);
+            --shadow-lg: 0 12px 32px rgba(0,0,0,0.1),0 2px 8px rgba(0,0,0,0.05);
+            --radius-sm: 8px;
+            --radius: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+            --font-mono: 'SF Mono','Cascadia Code','Consolas','Monaco','Menlo',monospace;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+            background: var(--bg); color: var(--text); line-height:1.6; min-height:100vh;
+            -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+        }
+        .header { background: var(--card-bg); border-bottom:1px solid var(--border); padding:16px 20px; position:sticky; top:0; z-index:100; backdrop-filter:blur(12px); }
+        .header-inner { max-width:720px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+        .header-logo { display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--text); }
+        .header-logo .logo-icon { width:40px; height:40px; border-radius:var(--radius-sm); background:linear-gradient(135deg,#f97316,#fbbf24); display:flex; align-items:center; justify-content:center; font-size:22px; color:#fff; flex-shrink:0; }
+        .header-logo h1 { font-size:1.2rem; font-weight:700; }
+        .header-stats { display:flex; gap:16px; font-size:0.85rem; color:var(--text-secondary); }
+        .header-stats .stat-num { font-weight:700; color:var(--primary); font-size:1.1rem; }
+        .container { max-width:720px; margin:0 auto; padding:20px 16px 40px; display:flex; flex-direction:column; gap:20px; }
+        .card { background:var(--card-bg); border-radius:var(--radius-lg); padding:20px 22px; box-shadow:var(--shadow); border:1px solid var(--border); }
+        .card-title { font-size:1rem; font-weight:700; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+        .platform-selector { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+        .platform-option { display:flex; align-items:center; gap:5px; padding:8px 14px; border-radius:22px; border:2px solid var(--border); background:#fafaf9; cursor:pointer; font-size:0.88rem; font-weight:500; transition:var(--transition); user-select:none; color:var(--text-secondary); }
+        .platform-option:hover { border-color:#fbbf24; background:#fffdf7; transform:translateY(-1px); }
+        .platform-option.selected { border-color:var(--primary); background:var(--primary-light); color:var(--primary); font-weight:600; }
+        .input-group { display:flex; gap:10px; flex-wrap:wrap; }
+        .input-group input { flex:1; min-width:180px; padding:12px 16px; border:2px solid var(--border); border-radius:var(--radius); font-size:0.95rem; font-family:var(--font-mono); background:#fafaf9; outline:none; }
+        .input-group input:focus { border-color:var(--primary); box-shadow:0 0 0 4px rgba(249,115,22,0.06); background:#fff; }
+        .input-group .note-input { flex:0.6; min-width:120px; font-family:inherit; }
+        .btn { padding:12px 22px; border-radius:var(--radius); font-size:0.93rem; font-weight:600; cursor:pointer; border:none; transition:var(--transition); display:inline-flex; align-items:center; gap:6px; }
+        .btn-primary { background:var(--primary); color:#fff; }
+        .btn-primary:hover { background:var(--primary-hover); transform:translateY(-1px); }
+        .filter-bar { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+        .filter-tag { padding:7px 14px; border-radius:20px; font-size:0.82rem; font-weight:500; cursor:pointer; border:1.5px solid var(--border); background:#fafaf9; transition:var(--transition); color:var(--text-secondary); }
+        .filter-tag:hover { border-color:#c5c5c5; }
+        .filter-tag.active { background:#1e1e1e; color:#fff; border-color:#1e1e1e; }
+        .code-list { display:flex; flex-direction:column; gap:10px; }
+        .code-item { display:flex; align-items:center; gap:12px; padding:14px 16px; background:#fafaf9; border-radius:var(--radius); border:1px solid var(--border); flex-wrap:wrap; }
+        .code-item:hover { border-color:#d4d4d4; background:#fff; }
+        .code-platform-badge { display:flex; align-items:center; gap:4px; padding:5px 10px; border-radius:14px; font-size:0.78rem; font-weight:600; white-space:nowrap; }
+        .code-text { flex:1; font-family:var(--font-mono); font-size:0.95rem; font-weight:600; letter-spacing:0.8px; word-break:break-all; min-width:120px; }
+        .code-note { font-size:0.78rem; color:var(--text-muted); font-style:italic; flex-shrink:0; }
+        .code-time { font-size:0.73rem; color:#b5b5b5; flex-shrink:0; }
+        .code-actions { display:flex; gap:6px; flex-shrink:0; }
+        .btn-sm { padding:7px 14px; font-size:0.8rem; border-radius:18px; font-weight:600; cursor:pointer; border:none; }
+        .btn-use { background:var(--success); color:#fff; }
+        .btn-use:hover { background:#059669; transform:translateY(-1px); }
+        .btn-copy { background:#f0f0f0; color:#555; border:1.5px solid #e0e0e0; }
+        .empty-state { text-align:center; padding:40px 20px; color:var(--text-muted); }
+        .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; display:flex; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px); }
+        .modal { background:#fff; border-radius:var(--radius-xl); padding:28px 24px; max-width:420px; width:100%; box-shadow:var(--shadow-lg); text-align:center; }
+        .modal-code { display:inline-block; font-family:var(--font-mono); font-size:1.15rem; font-weight:700; background:#fefce8; padding:10px 18px; border-radius:var(--radius-sm); margin:10px 0; border:2px dashed #fbbf24; }
+        .modal-warning { font-size:0.8rem; color:#ef4444; margin:8px 0 16px; }
+        .toast-container { position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:300; display:flex; flex-direction:column; gap:8px; pointer-events:none; width:90%; max-width:440px; }
+        .toast { padding:13px 18px; border-radius:var(--radius); font-weight:600; font-size:0.88rem; text-align:center; animation:toastIn 0.35s ease; pointer-events:auto; box-shadow:var(--shadow-lg); }
+        @keyframes toastIn { from{opacity:0;transform:translateY(-30px);} to{opacity:1;transform:translateY(0);} }
+        .toast.success { background:#065f46; color:#fff; }
+        .toast.error { background:#991b1b; color:#fff; }
+        .toast.info { background:#1e3a5f; color:#fff; }
+        @media (max-width:600px) {
+            .header-inner { flex-direction:column; }
+            .input-group { flex-direction:column; }
+            .code-item { flex-direction:column; align-items:flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-inner">
+            <div class="header-logo"><div class="logo-icon">🤝</div><h1>邀请码互助平台</h1></div>
+            <div class="header-stats"><span>可用 <strong class="stat-num" id="statAvailable">0</strong></span><span>今日已用 <strong class="stat-num" id="statUsedToday">0</strong></span></div>
+        </div>
+    </header>
+    <div class="container">
+        <div class="card">
+            <div class="card-title"><span>📤</span> 分享邀请码</div>
+            <div class="platform-selector" id="platformSelector"></div>
+            <div class="input-group">
+                <input type="text" id="codeInput" placeholder="请输入邀请码" maxlength="120">
+                <input type="text" id="noteInput" class="note-input" placeholder="备注（可选）" maxlength="40">
+                <button class="btn btn-primary" id="submitBtn">📤 提交分享</button>
+            </div>
+        </div>
+        <div class="filter-bar" id="filterBar"></div>
+        <div class="code-list" id="codeList"></div>
+    </div>
+    <div class="modal-overlay" id="modalOverlay" style="display:none;">
+        <div class="modal">
+            <span style="font-size:3rem;">✅</span>
+            <h3>确认使用邀请码</h3>
+            <div class="modal-code" id="modalCode"></div>
+            <p class="modal-warning">⚠️ 使用后该邀请码将<strong>立即失效</strong></p>
+            <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+                <button class="btn-cancel" id="modalCancel" style="background:#f0f0f0; padding:10px 20px; border-radius:22px; border:none; cursor:pointer;">取消</button>
+                <button class="btn-confirm" id="modalConfirm" style="background:#10b981; color:#fff; padding:10px 22px; border-radius:22px; border:none; cursor:pointer;">✅ 确认使用</button>
+            </div>
+        </div>
+    </div>
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        (function() {
+            // ==================== 配置 ====================
+            // 请将下面两行替换为你自己的 GitHub 用户名和仓库名
+            const GITHUB_USER = '你的GitHub用户名';
+            const GITHUB_REPO = 'invite-help';  // 你的仓库名
+            const API_BASE = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/issues`;
+
+            // 平台列表
+            const platforms = [
+                { id: 'pinduoduo', name: '拼多多', emoji: '🛒', color: '#e53e3e', bgColor: '#fef2f2' },
+                { id: 'jd', name: '京东', emoji: '🐶', color: '#c41e3a', bgColor: '#fef5f5' },
+                { id: 'taobao', name: '淘宝', emoji: '🧡', color: '#ff6b00', bgColor: '#fff8f0' },
+                { id: 'meituan', name: '美团', emoji: '🍔', color: '#f5a623', bgColor: '#fffdf5' },
+                { id: 'eleme', name: '饿了么', emoji: '🍜', color: '#0085ff', bgColor: '#f0f7ff' },
+                { id: 'douyin', name: '抖音', emoji: '🎵', color: '#1a1a1a', bgColor: '#f5f5f5' },
+                { id: 'kuaishou', name: '快手', emoji: '🎬', color: '#ff4906', bgColor: '#fff5f0' },
+                { id: 'other', name: '其他', emoji: '📋', color: '#718096', bgColor: '#f7f8f9' }
+            ];
+            const platformMap = {};
+            platforms.forEach(p => { platformMap[p.id] = p; });
+
+            // DOM
+            const platformSelector = document.getElementById('platformSelector');
+            const codeInput = document.getElementById('codeInput');
+            const noteInput = document.getElementById('noteInput');
+            const submitBtn = document.getElementById('submitBtn');
+            const filterBar = document.getElementById('filterBar');
+            const codeList = document.getElementById('codeList');
+            const modalOverlay = document.getElementById('modalOverlay');
+            const modalCode = document.getElementById('modalCode');
+            const modalCancel = document.getElementById('modalCancel');
+            const modalConfirm = document.getElementById('modalConfirm');
+            const toastContainer = document.getElementById('toastContainer');
+            const statAvailable = document.getElementById('statAvailable');
+            const statUsedToday = document.getElementById('statUsedToday');
+
+            let selectedPlatform = 'pinduoduo';
+            let currentFilter = 'all';
+            let pendingUseId = null;
+
+            // Toast
+            function showToast(msg, type='info') {
+                const t = document.createElement('div');
+                t.className = `toast ${type}`;
+                t.textContent = msg;
+                toastContainer.appendChild(t);
+                setTimeout(() => {
+                    t.style.opacity = '0';
+                    t.style.transform = 'translateY(-20px)';
+                    t.style.transition = 'all 0.3s';
+                    setTimeout(() => t.remove(), 300);
+                }, 2000);
+            }
+
+            // 格式化时间
+            function formatTime(dateStr) {
+                const now = Date.now();
+                const diff = now - new Date(dateStr).getTime();
+                const sec = Math.floor(diff/1000);
+                if(sec<60) return '刚刚';
+                const min = Math.floor(sec/60);
+                if(min<60) return `${min}分钟前`;
+                const h = Math.floor(min/60);
+                if(h<24) return `${h}小时前`;
+                const d = Math.floor(h/24);
+                if(d<7) return `${d}天前`;
+                const date = new Date(dateStr);
+                return `${date.getMonth()+1}/${date.getDate()}`;
+            }
+
+            function isToday(dateStr) {
+                const d = new Date(dateStr);
+                const today = new Date();
+                return d.getFullYear()===today.getFullYear() && d.getMonth()===today.getMonth() && d.getDate()===today.getDate();
+            }
+
+            function escapeHtml(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            // 从 Issue 解析数据
+            function parseIssue(issue) {
+                const lines = issue.body.split('\n');
+                const meta = {};
+                lines.forEach(line => {
+                    const [key, val] = line.split(': ');
+                    if(key && val) meta[key.trim()] = val.trim();
+                });
+                return {
+                    id: issue.number,
+                    platform: meta.platform || 'other',
+                    code: meta.code || '',
+                    note: meta.note || '',
+                    status: meta.status || 'available',
+                    created_at: issue.created_at,
+                    used_at: meta.status==='used' ? issue.updated_at : null,
+                    title: issue.title
+                };
+            }
+
+            async function fetchIssues(label='available') {
+                const url = `${API_BASE}?labels=${label}&state=open&per_page=100`;
+                const res = await fetch(url, { headers: { Accept: 'application/vnd.github.v3+json' } });
+                if(!res.ok) throw new Error('获取数据失败');
+                const issues = await res.json();
+                return issues.map(parseIssue).filter(item => item.platform && item.code);
+            }
+
+            async function createIssue(platform, code, note) {
+                const body = `platform: ${platform}\ncode: ${code}\nnote: ${note}\nstatus: available`;
+                const res = await fetch(API_BASE, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Accept: 'application/vnd.github.v3+json',
+                        // 匿名无需 token，但有频率限制
+                    },
+                    body: JSON.stringify({
+                        title: `[可用] ${platform} - ${code.substring(0,30)}`,
+                        body,
+                        labels: ['available']
+                    })
+                });
+                if(!res.ok) throw new Error('提交失败，可能达到频率限制，请稍后再试');
+                return res.json();
+            }
+
+            async function markIssueUsed(issueNumber) {
+                // 更新 Issue：移除 available 标签，添加 used 标签，并修改 body
+                const body = await fetch(`${API_BASE}/${issueNumber}`, { headers: { Accept: 'application/vnd.github.v3+json' } }).then(r => r.json()).then(iss => iss.body);
+                const newBody = body.replace('status: available', 'status: used');
+                const res = await fetch(`${API_BASE}/${issueNumber}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Accept: 'application/vnd.github.v3+json',
+                    },
+                    body: JSON.stringify({
+                        body: newBody,
+                        labels: ['used'],
+                        state: 'closed'
+                    })
+                });
+                if(!res.ok) throw new Error('使用失败');
+                return true;
+            }
+
+            // 渲染平台选择器
+            function renderPlatformSelector() {
+                platformSelector.innerHTML = platforms.map(p => {
+                    const sel = selectedPlatform===p.id ? ' selected' : '';
+                    return `<div class="platform-option${sel}" data-platform="${p.id}"><span>${p.emoji}</span> ${p.name}</div>`;
+                }).join('');
+                platformSelector.querySelectorAll('.platform-option').forEach(opt => {
+                    opt.addEventListener('click', function() {
+                        selectedPlatform = this.dataset.platform;
+                        renderPlatformSelector();
+                        codeInput.focus();
+                    });
+                });
+            }
+
+            let currentAvailable = [];
+
+            async function renderAll() {
+                try {
+                    currentAvailable = await fetchIssues('available');
+                    const usedTodayIssues = await fetchIssues('used');
+                    const usedTodayCount = usedTodayIssues.filter(iss => isToday(iss.updated_at || iss.created_at)).length;
+                    statAvailable.textContent = currentAvailable.length;
+                    statUsedToday.textContent = usedTodayCount;
+                    renderFilterBar();
+                    renderCodeList();
+                } catch(e) {
+                    showToast(e.message, 'error');
+                }
+            }
+
+            function renderFilterBar() {
+                const counts = {};
+                let total = 0;
+                currentAvailable.forEach(item => {
+                    counts[item.platform] = (counts[item.platform]||0)+1;
+                    total++;
+                });
+                let html = `<div class="filter-tag${currentFilter==='all'?' active':''}" data-filter="all">全部 <span>${total}</span></div>`;
+                platforms.forEach(p => {
+                    const c = counts[p.id]||0;
+                    html += `<div class="filter-tag${currentFilter===p.id?' active':''}" data-filter="${p.id}">${p.emoji} ${p.name} <span>${c}</span></div>`;
+                });
+                filterBar.innerHTML = html;
+                filterBar.querySelectorAll('.filter-tag').forEach(tag => {
+                    tag.addEventListener('click', function() {
+                        currentFilter = this.dataset.filter;
+                        renderCodeList();
+                    });
+                });
+            }
+
+            function renderCodeList() {
+                let filtered = currentAvailable;
+                if(currentFilter !== 'all') filtered = currentAvailable.filter(item => item.platform === currentFilter);
+                if(filtered.length===0) {
+                    codeList.innerHTML = `<div class="empty-state"><span style="font-size:3rem;">📭</span><p>暂无可用邀请码</p></div>`;
+                    return;
+                }
+                codeList.innerHTML = filtered.map(item => {
+                    const p = platformMap[item.platform] || platformMap['other'];
+                    const timeStr = formatTime(item.created_at);
+                    const noteHtml = item.note ? `<span class="code-note">💬 ${escapeHtml(item.note)}</span>` : '';
+                    return `<div class="code-item" data-id="${item.id}">
+                        <span class="code-platform-badge" style="background:${p.bgColor};color:${p.color};">${p.emoji} ${p.name}</span>
+                        <span class="code-text">${escapeHtml(item.code)}</span>
+                        ${noteHtml}
+                        <span class="code-time">🕐 ${timeStr}</span>
+                        <div class="code-actions">
+                            <button class="btn-sm btn-copy" data-id="${item.id}">📋 复制</button>
+                            <button class="btn-sm btn-use" data-id="${item.id}">✅ 使用</button>
+                        </div>
+                    </div>`;
+                }).join('');
+                codeList.querySelectorAll('.btn-use').forEach(btn => {
+                    btn.addEventListener('click', () => openUseModal(btn.dataset.id));
+                });
+                codeList.querySelectorAll('.btn-copy').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const item = currentAvailable.find(c => c.id == btn.dataset.id);
+                        if(item) { copyToClipboard(item.code); showToast('📋 已复制', 'info'); }
+                    });
+                });
+            }
+
+            function openUseModal(id) {
+                const item = currentAvailable.find(c => c.id == id);
+                if(!item) { showToast('该码已失效', 'error'); renderAll(); return; }
+                pendingUseId = id;
+                modalCode.textContent = item.code;
+                modalOverlay.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeModal() {
+                modalOverlay.style.display = 'none';
+                document.body.style.overflow = '';
+                pendingUseId = null;
+            }
+
+            async function confirmUse() {
+                if(!pendingUseId) return;
+                try {
+                    await markIssueUsed(pendingUseId);
+                    const item = currentAvailable.find(c => c.id == pendingUseId);
+                    if(item) copyToClipboard(item.code);
+                    closeModal();
+                    await renderAll();
+                    showToast('✅ 使用成功！', 'success');
+                } catch(e) {
+                    showToast(e.message, 'error');
+                    closeModal();
+                }
+            }
+
+            function copyToClipboard(text) {
+                if(navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+                } else fallbackCopy(text);
+            }
+            function fallbackCopy(text) {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+            }
+
+            async function submitCode() {
+                const code = codeInput.value.trim();
+                const note = noteInput.value.trim();
+                if(!code) { showToast('请输入邀请码', 'error'); return; }
+                try {
+                    await createIssue(selectedPlatform, code, note);
+                    codeInput.value = '';
+                    noteInput.value = '';
+                    codeInput.focus();
+                    await renderAll();
+                    showToast('🎉 分享成功！', 'success');
+                } catch(e) {
+                    showToast(e.message, 'error');
+                }
+            }
+
+            // 事件绑定
+            submitBtn.addEventListener('click', submitCode);
+            codeInput.addEventListener('keydown', e => { if(e.key==='Enter') submitCode(); });
+            noteInput.addEventListener('keydown', e => { if(e.key==='Enter') submitCode(); });
+            modalCancel.addEventListener('click', closeModal);
+            modalConfirm.addEventListener('click', confirmUse);
+            modalOverlay.addEventListener('click', e => { if(e.target===modalOverlay) closeModal(); });
+            document.addEventListener('keydown', e => { if(e.key==='Escape' && modalOverlay.style.display==='flex') closeModal(); });
+
+            // 初始化
+            renderPlatformSelector();
+            renderAll();
+            // 每30秒自动刷新
+            setInterval(renderAll, 30000);
+        })();
+    </script>
+</body>
+</html>
